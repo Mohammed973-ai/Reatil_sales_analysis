@@ -19,9 +19,12 @@ Comprehensive retail sales analysis leveraging Microsoft SQL Server to extract a
 
 ## Project Structure
 
-* __Database Setup :__ The project starts with creating a database called Retail database. it has a table called Retail_transactions that contains the retail data which consists of transactions_id, 
-sale_date, sale_time, customer_id, gender, age, category ,quantiy	 ,price_per_unit,cogs	,total_sale.  the data was added to the table using bulk insert
-```sql
+1. ### Database Setup 
+*  __Database_creation:__ The project starts with creating a database called Retail database.
+*  __Table_creation:__  table called Retail_transactionsis created in the database
+* __Data loading__:  the data then was added to the table using bulk insert. the data consists of transactions_id, sale_date, sale_time, customer_id, gender, age, category ,quantiy	 ,price_per_unit,cogs	,total_sale. 
+
+ ```tsql 
 CREATE TABLE Retail_transaction(
 	transactions_id	int PRIMARY KEY, 
 	sale_date	DATE , 
@@ -34,5 +37,12 @@ CREATE TABLE Retail_transaction(
 	price_per_unit money,
 	cogs	money,
 	total_sale money
-)
+);
+```
+
+```tsql
+bulk insert  Retail_transaction
+from 'my_data_path.csv'
+WITH(fieldterminator =',',FIRSTROW = 2)
+TRUNCATE TABLE Retail_transaction
 ```
