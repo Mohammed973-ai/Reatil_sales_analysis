@@ -327,32 +327,252 @@ WHERE transactions_id = 180 --same as the original table
   </table>
 </div>
 
+* __what is the most selling category ? in terms of total sale__
+  ```tsql
+  	WITH sales_summary
+	AS 
+	(SELECT isnull(format(sale_date,'yyyy'),'total sales for ')AS [year],
+	isnull(isnull(category,'subtotal for '
+	+format(sale_date,'yyyy')),'all caregories ') 
+	AS[category],sum(total_sale) AS [total sales]
+	,count(*) AS [number of orders]
+	FROM Retail_transaction
+	GROUP BY category,format(sale_date,'yyyy'))
+	SELECT year , category ,[total sales] 
+	FROM (SELECT *, ROW_NUMBER()OVER(Partition by year Order by [total sales] desc)
+	AS RN 
+	FROM sales_summary) AS t
+	where RN = 1
+  ```
+  ### Query Result
+	<div style="margin-left: 70%;">
+	  <table>
+	    <tr>
+	      <th>Year</th>
+	      <th>Category</th>
+	      <th>Total Sale</th>
+	    </tr>
+	    <tr><td>2022</td><td>Beauty</td><td>151510.00</td></tr>
+	    <tr><td>2023</td><td>Electronics</td><td>162350.00</td></tr>
+	  </table>
+	</div>
+
+* __what is the most selling category ? in terms of  number of orders__
+
+  ```tsql
+  WITH sales_summary
+	AS 
+	(SELECT isnull(format(sale_date,'yyyy'),'total sales for ')AS [year],
+	isnull(isnull(category,'subtotal for '
+	+format(sale_date,'yyyy')),'all caregories ') 
+	AS[category],sum(total_sale) AS [total sales]
+	,count(*) AS [number of orders]
+	FROM Retail_transaction
+	GROUP BY category,format(sale_date,'yyyy'))
+	SELECT year , category ,[number of orders]
+	FROM (SELECT *, ROW_NUMBER()OVER(Partition by year Order by [number of orders] desc)
+	AS RN 
+	FROM sales_summary) AS t
+	where RN = 1
+  ```
+  ### Query Result
+  <div style="margin-left: 70%;">
+  <table>
+    <tr>
+      <th>Year</th>
+      <th>Category</th>
+      <th>Number of Orders</th>
+    </tr>
+    <tr><td>2022</td><td>Clothing</td><td>334</td></tr>
+    <tr><td>2023</td><td>Clothing</td><td>368</td></tr>
+  </table>
+</div>
+
+
 *  __What is the net profit we made ?__
     ```tsql
+    WITH netprofit
+	AS( SELECT * ,  (quantiy * price_per_unit)-cogs as [profit]
+		FROM Retail_transaction
+	)
+	SELECT isnull(format(sale_date,'yyyy'),'total sales for ')AS [year],
+	isnull(isnull(category,'subtotal for '
+	+format(sale_date,'yyyy')),'all caregories ') 
+	AS[category],sum(profit) AS [net profit]
+	,count(*) AS [number of orders]
+	FROM netprofit
+	GROUP BY cube(category,format(sale_date,'yyyy'))
+    
     ```
+      ### Query Result
+    <div style="margin-left: 40%;">
+  <table>
+    <tr>
+      <th>Year</th>
+      <th>Category</th>
+      <th>Net Profit</th>
+      <th>Number of Orders</th>
+    </tr>
+    <tr><td>2022</td><td>Beauty</td><td>118369.50</td><td>314</td></tr>
+    <tr><td>2022</td><td>Clothing</td><td>118550.15</td><td>334</td></tr>
+    <tr><td>2022</td><td>Electronics</td><td>119895.95</td><td>331</td></tr>
+    <tr><td>2022</td><td><strong>Subtotal for 2022</strong></td><td><strong>356815.60</strong></td><td><strong>979</strong></td></tr>
+    <tr><td>2023</td><td>Beauty</td><td>110260.65</td><td>300</td></tr>
+    <tr><td>2023</td><td>Clothing</td><td>128129.35</td><td>368</td></tr>
+    <tr><td>2023</td><td>Electronics</td><td>126751.70</td><td>353</td></tr>
+    <tr><td>2023</td><td><strong>Subtotal for 2023</strong></td><td><strong>365141.70</strong></td><td><strong>1021</strong></td></tr>
+    <tr><td colspan="2"><strong>Total Net Profit for all categories</strong></td><td><strong>721957.30</strong></td><td><strong>2000</strong></td></tr>
+    <tr><td colspan="2"><strong>Total Net Profit for Beauty</strong></td><td><strong>228630.15</strong></td><td><strong>614</strong></td></tr>
+    <tr><td colspan="2"><strong>Total Net Profit for Clothing</strong></td><td><strong>246679.50</strong></td><td><strong>702</strong></td></tr>
+    <tr><td colspan="2"><strong>Total Net Profit for Electronics</strong></td><td><strong>246647.65</strong></td><td><strong>684</strong></td></tr>
+  </table>
+</div>
+
 *  __What is the net profit per quarter__
     ```tsql
+    WITH add_quarter
+	AS (
+		SELECT *, CASE 
+		WHEN DATEPART(QUARTER, sale_date)  = 1 THEN 'Q1'
+		WHEN DATEPART(QUARTER, sale_date)  = 2 THEN 'Q2'
+		WHEN DATEPART(QUARTER, sale_date)  = 3 THEN 'Q3'
+		WHEN DATEPART(QUARTER, sale_date)  = 4 THEN 'Q4'
+		END AS [quarter] ,(quantiy*price_per_unit)-cogs AS [profit]
+	FROM Retail_transaction
+	),
+	profit_quarter
+	AS
+	(SELECT year(sale_date) as [year] ,quarter , sum(profit) AS [net profit] FROM add_quarter
+	GROUP BY year(sale_date) , quarter)
+	SELECT * FROM profit_quarter
+	PIVOT(SUM([net profit]) for quarter in ([Q1],[Q2],[Q3],[Q4]))
+	AS pvt
     ```
+      ### Query Result
+   <div style="margin-left: 100%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Year</th>
+      <th>Q1</th>
+      <th>Q2</th>
+      <th>Q3</th>
+      <th>Q4</th>
+    </tr>
+    <tr>
+      <td>2022</td>
+      <td>53469.85</td>
+      <td>61838.25</td>
+      <td>83752.00</td>
+      <td>157755.50</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>58250.05</td>
+      <td>61406.20</td>
+      <td>104940.10</td>
+      <td>140545.35</td>
+    </tr>
+  </table>
+</div>
+
+
 *  __what is our profit margins by product category__
     ```tsql
+    SELECT 
+    category,
+    SUM(total_sale) as total_revenue,
+    SUM((quantiy * price_per_unit) - cogs) as total_profit,
+    concat(ROUND(
+        SUM((quantiy * price_per_unit) - cogs) *100 / 
+        SUM(total_sale), 2
+    ),'%') as profit_margin_percent
+	FROM Retail_transaction
+	GROUP BY category
+	ORDER BY profit_margin_percent DESC;
     ```
+   ### Query Result
+<div style="margin-left: 70%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Category</th>
+      <th>Total Revenue</th>
+      <th>Total Profit</th>
+      <th>Profit_Margin_percent</th>
+    </tr>
+    <tr>
+      <td>Beauty</td>
+      <td>286,840.00</td>
+      <td>228,630.15</td>
+      <td>79.71%</td>
+    </tr>
+    <tr>
+      <td>Clothing</td>
+      <td>311,070.00</td>
+      <td>246,679.50</td>
+      <td>79.30%</td>
+    </tr>
+    <tr>
+      <td>Electronics</td>
+      <td>313,810.00</td>
+      <td>246,647.65</td>
+      <td>78.60%</td>
+    </tr>
+  </table>
+</div>
+
+
 *  __all transactions where the total_sale is greater than 1000.__
     ```tsql
+    SELECT	* from Retail_transaction
+	WHERE total_sale >= 1000
+    ```
+     ```tsql
+     SELECT CONCAT(ROUND(AVG(total_sale),2),' ','$')
+	FROM Retail_transaction
     ```
 *  __the total number of transactions and total sale made by each gender in each category__
     ```tsql
+    SELECT isnull(gender,'gross total') AS[gender],
+	isnull(isnull(category,'subtotal for ' + gender) 
+	,'all categories')AS [category],COUNT(*) AS [number of category],
+	sum(total_sale) AS [total sale]
+	FROM Retail_transaction
+	GROUP BY rollup(gender,category)
     ```
 *  __what is the best selling month in each year?__
     ```tsql
+    SELECT year , month , [total sale] FROM (SELECT year(sale_date) as [year],month(sale_date) as [month], sum(total_sale) as [total sale] , DENSE_RANK() over (partition by year(sale_date)  order by sum(total_sale) DESC) AS DR
+	FROM Retail_transaction
+	GROUP BY year(sale_date),month(sale_date)) as t
+	WHERE DR =1
     ```
 *  __who are our top 5 loyal customers ?__
     ```tsql
+    SELECT TOP(5)customer_id,Count(*) AS [Number of interaction],Sum(total_sale) AS [money spent] 
+	FROM Retail_transaction
+	GROUP BY customer_id
+	ORDER BY [Number of interaction] DESC
     ```
 *  __top 5 customers based on the highest total sales __
     ```tsql
+    SELECT TOP(5)customer_id , sum(total_sale) as [total sale per customer]
+	FROM Retail_transaction
+	GROUP BY customer_id
+	ORDER BY [total sale per customer] DESC
     ```
 *  __What are the orders in each shift ?  (Example Morning <12, Afternoon Between 12 & 17, Evening >17):__
     ```tsql
+    WITH shifts AS (
+    SELECT *,
+           CASE
+               WHEN sale_time < '12:00:00' THEN 'Morning'
+               WHEN sale_time BETWEEN '12:00:00' AND '17:00:00' THEN 'Afternoon' 
+               ELSE 'Evening'  -- Using ELSE instead of third condition
+           END AS [shift]
+    FROM Retail_transaction
+	)
+	SELECT shift , count(*) AS [number transaction] FROM shifts
+	GROUP BY shift
     ```
 
 
