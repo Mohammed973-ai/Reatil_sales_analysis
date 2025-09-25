@@ -14,7 +14,7 @@ CREATE TABLE Retail_transaction(
 )
 -- load data
 bulk insert  Retail_transaction
-from 'D:\Life_factory\Career\SQL\Projects\Retail_project\SQL - Retail Sales Analysis_utf .csv'
+from 'MY_DATA_PATH .csv'
 WITH(fieldterminator =',',FIRSTROW = 2)
 TRUNCATE TABLE Retail_transaction
 -- check if it matches the original data
@@ -246,4 +246,5 @@ WITH shifts AS (
 )
 SELECT shift , count(*) AS [number transaction] FROM shifts
 GROUP BY shift
+
 -- workload is heavy at evening
