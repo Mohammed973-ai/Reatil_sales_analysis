@@ -19,3 +19,20 @@ Comprehensive retail sales analysis leveraging Microsoft SQL Server to extract a
 
 ## Project Structure
 
+* __Database Setup :__ The project starts with creating a database called Retail database. it has a table called Retail_transactions that contains the retail data which consists of transactions_id, 
+sale_date, sale_time, customer_id, gender, age, category ,quantiy	 ,price_per_unit,cogs	,total_sale.  the data was added to the table using bulk insert
+```sql
+CREATE TABLE Retail_transaction(
+	transactions_id	int PRIMARY KEY, 
+	sale_date	DATE , 
+	sale_time	TIME , 
+	customer_id	INT,
+	gender VARCHAR(10),
+	age	tinyint , 
+	category VARCHAR(50),
+	quantiy	INT ,
+	price_per_unit money,
+	cogs	money,
+	total_sale money
+)
+```
