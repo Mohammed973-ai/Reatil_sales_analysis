@@ -523,13 +523,40 @@ WHERE transactions_id = 180 --same as the original table
 
 *  __all transactions where the total_sale is greater than 1000.__
     ```tsql
-    SELECT	* from Retail_transaction
+    SELECT	COUNT(*) from Retail_transaction
 	WHERE total_sale >= 1000
     ```
-     ```tsql
+    ### Query Result
+    <div style="margin-left: 70%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>premium transactions</th>
+    </tr>
+    <tr>
+      <td>404</td>
+    </tr>
+  </table>
+</div>
+
+
+ ```tsql
      SELECT CONCAT(ROUND(AVG(total_sale),2),' ','$')
 	FROM Retail_transaction
-    ```
+ ```
+      
+### Query Result
+   <div style="margin-left: 70%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Avg Total Sale</th>
+    </tr>
+    <tr>
+      <td>456.54 $</td>
+    </tr>
+  </table>
+</div>
+
+
 *  __the total number of transactions and total sale made by each gender in each category__
     ```tsql
     SELECT isnull(gender,'gross total') AS[gender],
@@ -539,6 +566,71 @@ WHERE transactions_id = 180 --same as the original table
 	FROM Retail_transaction
 	GROUP BY rollup(gender,category)
     ```
+     ### Query Result
+   <div style="margin-left: 70%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Gender</th>
+      <th>Category</th>
+      <th>Number of Category</th>
+      <th>Total Sale</th>
+    </tr>
+    <tr>
+      <td>Female</td>
+      <td>Beauty</td>
+      <td>332</td>
+      <td>149470.00</td>
+    </tr>
+    <tr>
+      <td>Female</td>
+      <td>Clothing</td>
+      <td>348</td>
+      <td>162460.00</td>
+    </tr>
+    <tr>
+      <td>Female</td>
+      <td>Electronics</td>
+      <td>340</td>
+      <td>153470.00</td>
+    </tr>
+    <tr>
+      <td>Female</td>
+      <td><strong>Subtotal for Female</strong></td>
+      <td><strong>1020</strong></td>
+      <td><strong>465400.00</strong></td>
+    </tr>
+    <tr>
+      <td>Male</td>
+      <td>Beauty</td>
+      <td>282</td>
+      <td>137370.00</td>
+    </tr>
+    <tr>
+      <td>Male</td>
+      <td>Clothing</td>
+      <td>354</td>
+      <td>148610.00</td>
+    </tr>
+    <tr>
+      <td>Male</td>
+      <td>Electronics</td>
+      <td>344</td>
+      <td>160340.00</td>
+    </tr>
+    <tr>
+      <td>Male</td>
+      <td><strong>Subtotal for Male</strong></td>
+      <td><strong>980</strong></td>
+      <td><strong>446320.00</strong></td>
+    </tr>
+    <tr>
+      <td colspan="2"><strong>Gross Total (All Categories)</strong></td>
+      <td><strong>2000</strong></td>
+      <td><strong>911720.00</strong></td>
+    </tr>
+  </table>
+</div>
+
 *  __what is the best selling month in each year?__
     ```tsql
     SELECT year , month , [total sale] FROM (SELECT year(sale_date) as [year],month(sale_date) as [month], sum(total_sale) as [total sale] , DENSE_RANK() over (partition by year(sale_date)  order by sum(total_sale) DESC) AS DR
@@ -546,6 +638,30 @@ WHERE transactions_id = 180 --same as the original table
 	GROUP BY year(sale_date),month(sale_date)) as t
 	WHERE DR =1
     ```
+     ### Query Result
+   <div style="margin-left: 40%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Year</th>
+      <th>Month</th>
+      <th>Total Sale</th>
+    </tr>
+    <tr>
+      <td>2022</td>
+      <td>12</td>
+      <td>72880.00</td>
+    </tr>
+    <tr>
+      <td>2023</td>
+      <td>12</td>
+      <td>69145.00</td>
+    </tr>
+  </table>
+</div>
+
+
+__it is december in both years maybe because it is chrismas season , also the clothing was the most selled category which is reasonable to say it is because of the chrismas season__
+
 *  __who are our top 5 loyal customers ?__
     ```tsql
     SELECT TOP(5)customer_id,Count(*) AS [Number of interaction],Sum(total_sale) AS [money spent] 
@@ -553,13 +669,79 @@ WHERE transactions_id = 180 --same as the original table
 	GROUP BY customer_id
 	ORDER BY [Number of interaction] DESC
     ```
-*  __top 5 customers based on the highest total sales __
+     ### Query Result
+   <div style="margin-left: 40%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Customer ID</th>
+      <th>Number of Interactions</th>
+      <th>Money Spent</th>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>76</td>
+      <td>38440.00</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>76</td>
+      <td>30750.00</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>73</td>
+      <td>23580.00</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>69</td>
+      <td>25295.00</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>63</td>
+      <td>30405.00</td>
+    </tr>
+  </table>
+</div>
+
+*  __top 5 customers based on the highest total sales__
     ```tsql
     SELECT TOP(5)customer_id , sum(total_sale) as [total sale per customer]
 	FROM Retail_transaction
 	GROUP BY customer_id
 	ORDER BY [total sale per customer] DESC
     ```
+     ### Query Result
+   <div style="margin-left: 40%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Customer ID</th>
+      <th>Highest Total Sale</th>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>38440.00</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>30750.00</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>30405.00</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>25295.00</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>23580.00</td>
+    </tr>
+  </table>
+</div>
+
 *  __What are the orders in each shift ?  (Example Morning <12, Afternoon Between 12 & 17, Evening >17):__
     ```tsql
     WITH shifts AS (
@@ -574,7 +756,27 @@ WHERE transactions_id = 180 --same as the original table
 	SELECT shift , count(*) AS [number transaction] FROM shifts
 	GROUP BY shift
     ```
-
+ ### Query Result
+<div style="margin-left: 70%;">
+  <table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Shift</th>
+      <th>Number of Interactions</th>
+    </tr>
+    <tr>
+      <td>Evening</td>
+      <td>1275</td>
+    </tr>
+    <tr>
+      <td>Morning</td>
+      <td>561</td>
+    </tr>
+    <tr>
+      <td>Afternoon</td>
+      <td>164</td>
+    </tr>
+  </table>
+</div>
 
    
 
